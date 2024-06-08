@@ -1,0 +1,8 @@
+{
+  "database": {
+    "dbname": "dictionary",
+    "user": "root",
+    "password": "root",
+    "host": "localhost"
+  }
+}

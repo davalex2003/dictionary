@@ -1,0 +1,15 @@
+version: '3.1'
+
+services:
+  db:
+    image: dockerhub.timeweb.cloud/library/postgres:latest
+    restart: always
+    environment:
+      POSTGRES_DB: "dictionary"
+      POSTGRES_USER: "root"
+      POSTGRES_PASSWORD: "root"
+      TZ: Europe/Moscow
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./sql:/docker-entrypoint-initdb.d/
