@@ -1,11 +1,10 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter
 from starlette.responses import JSONResponse
-from random import randint
-from schemas import User, UserLogin
+from schemas import User
 import json
 import psycopg2
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(prefix="/user", tags=["user"])
 
 
 @router.post("/register")

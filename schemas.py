@@ -6,5 +6,16 @@ class User(BaseModel):
     hash_password: str
 
 
-class UserLogin(BaseModel):
-    login: str
+class UserID(BaseModel):
+    id: int
+
+
+class Dictionary(BaseModel):
+    id: int
+    name: str
+
+
+class DictionaryDTO(BaseModel):
+    name: str
+    user_id: int
+    glosses: dict
