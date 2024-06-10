@@ -19,3 +19,20 @@ class DictionaryDTO(BaseModel):
     name: str
     user_id: int
     glosses: dict
+
+
+class WordDTO(BaseModel):
+    text: str
+    glosses: dict
+
+
+class DictionaryUpdate(BaseModel):
+    dict_id: int
+    name: str
+    glosses: dict
+
+
+class WordUpdate(BaseModel):
+    id: int
+    text: str
+    glosses: dict
