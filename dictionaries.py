@@ -1,9 +1,11 @@
 from typing import List
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, UploadFile, File
+from fastapi.responses import HTMLResponse
 from starlette.responses import JSONResponse
 import json
 from schemas import UserID, Dictionary, DictionaryDTO, WordDTO, DictionaryUpdate, WordUpdate
 from utils import connect
+from pdf_parser import parse_pdf
 
 router = APIRouter(prefix="/dictionary", tags=["dictionaries"])
 
@@ -93,3 +95,26 @@ async def delete_word(id: int = Query()):
     conn.commit()
     conn.close()
     return JSONResponse(status_code=200, content="Deleted")
+
+
+@router.post("/pdf")
+async def pdf(file: UploadFile = File(...), user_id: int = Query()):
+    file_location = f"{file.filename}"
+    with open(file_location, "wb") as f:
+        f.write(file.file.read())
+    dict = parse_pdf(file_location)
+    conn = connect()
+    with conn.cursor() as cursor:
+        cursor.execute('INSERT INTO "dictionary"(user_id, name, glosses) VALUES (%s, %s, %s)',
+                       (user_id, file_location, json.dumps({"Definition": []})))
+    conn.commit()
+    with conn.cursor() as cursor:
+        cursor.execute('SELECT id FROM "dictionary" ORDER BY id DESC LIMIT 1')
+        dict_id = cursor.fetchone()[0]
+    for i in dict:
+        with conn.cursor() as cursor:
+            cursor.execute('INSERT INTO "word"(dict_id, text, glosses) VALUES (%s, %s, %s)',
+                           (dict_id, i[0], json.dumps(i[1])))
+    conn.commit()
+    conn.close()
+    return JSONResponse(status_code=201, content="Created")

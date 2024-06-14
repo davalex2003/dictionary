@@ -18,7 +18,7 @@ async def register(user: User):
     with conn.cursor() as cursor:
         cursor.execute('SELECT * FROM "user" WHERE login = %s', (user.login,))
         if len(cursor.fetchall()) != 0:
-            return JSONResponse(status_code=409, content="Login already used")
+            return JSONResponse(status_code=400, content="Login already used")
     with conn.cursor() as cursor:
         cursor.execute('INSERT INTO "user" (login, hash_password) '
                        'VALUES (%s, %s)', (user.login, user.hash_password))
