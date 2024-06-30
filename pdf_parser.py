@@ -49,6 +49,13 @@ def parse_pdf(pdf_file: str) -> list:
         # Добавляем полученные пары "Лексема - Описание" в словарь
         for pair in lexemes:
             extracted_dict.append([pair[0], {'Definition': pair[1]}])
-
     dict_pdf.close()
-    return extracted_dict
+    symbols_to_remove = set('0123456789-_+=.,;!?\'"{}[]()~><±@#£$¢№%:^&*')
+    alphabet = set()
+    for word, _ in extracted_dict:
+        alphabet.update(set(word))
+    alphabet -= symbols_to_remove
+    alphabet = {symbol.upper() for symbol in alphabet}
+    alphabet = list(alphabet)
+    alphabet.sort()
+    return extracted_dict, alphabet

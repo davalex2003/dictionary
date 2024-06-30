@@ -35,13 +35,15 @@ async def dictionary_create(dictionary: DictionaryDTO):
 async def dictionary_words(user_id: int = Query(), dict_id: int = Query()):
     conn = connect()
     with conn.cursor() as cursor:
-        cursor.execute('SELECT name, glosses FROM "dictionary" WHERE user_id = %s AND id = %s', (user_id, dict_id))
+        cursor.execute('SELECT name, glosses, alphabet FROM "dictionary" WHERE user_id = %s AND id = %s',
+                       (user_id, dict_id))
         row = cursor.fetchone()
-    name, glosses = row[0], row[1]
+    name, glosses, alphabet = row[0], row[1], row[2]
     with conn.cursor() as cursor:
         cursor.execute('SELECT id, text, glosses FROM "word" WHERE dict_id = %s', (dict_id,))
         rows = cursor.fetchall()
-    return JSONResponse(status_code=200, content={"name": name, "glosses": glosses, "words": rows})
+    return JSONResponse(status_code=200,
+                        content={"name": name, "glosses": glosses, "words": rows, "alphabet": alphabet})
 
 
 @router.post("/word")
@@ -102,11 +104,13 @@ async def pdf(file: UploadFile = File(...), user_id: int = Query()):
     file_location = f"{file.filename}"
     with open(file_location, "wb") as f:
         f.write(file.file.read())
-    dict = parse_pdf(file_location)
+    parsed = parse_pdf(file_location)
+    dict = parsed[0]
+    alphabet = parsed[1]
     conn = connect()
     with conn.cursor() as cursor:
-        cursor.execute('INSERT INTO "dictionary"(user_id, name, glosses) VALUES (%s, %s, %s)',
-                       (user_id, file_location, json.dumps({"Definition": []})))
+        cursor.execute('INSERT INTO "dictionary"(user_id, name, glosses, alphabet) VALUES (%s, %s, %s, %s)',
+                       (user_id, file_location, json.dumps({"Definition": []}), alphabet))
     conn.commit()
     with conn.cursor() as cursor:
         cursor.execute('SELECT id FROM "dictionary" ORDER BY id DESC LIMIT 1')
@@ -118,3 +122,23 @@ async def pdf(file: UploadFile = File(...), user_id: int = Query()):
     conn.commit()
     conn.close()
     return JSONResponse(status_code=201, content="Created")
+
+
+@router.get("/", response_class=HTMLResponse)
+async def main_page():
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Upload PDF</title>
+    </head>
+    <body>
+        <h1>Upload PDF File</h1>
+        <form action="/dictionary/pdf?user_id=1" enctype="multipart/form-data" method="post">
+            <input type="file" name="file" required>
+            <button type="submit">Upload</button>
+        </form>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content)
